@@ -1,0 +1,61 @@
+version: '3.7'
+services:
+
+  magento2_mysql:
+    container_name: magento2_mysql
+    image: mysql:8.0.12
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: magento2
+      MYSQL_DATABASE: magento2
+      MYSQL_USER: magento2
+      MYSQL_PASSWORD: magento2
+    volumes:
+      - ./mysql:/var/lib/mysql
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    
+
+
+  magento2_apache:
+    container_name: magento2_apache
+    build: ./magento2-apache-php
+    depends_on:
+      - magento2_mysql
+      - magento2_elasticsearch
+    links:
+      - magento2_mysql
+      - magento2_elasticsearch
+    volumes:
+      - type: bind
+        source: ./magento2
+        target: /var/www/html
+        consistency: delegated
+      - ~/.composer/auth.json:/root/.composer/auth.json
+      
+  magento2_phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: magento2_phpmyadmin
+    links:
+      - magento2_mysql
+    depends_on:
+      - magento2_mysql
+    environment:
+      PMA_HOST: magento2_mysql
+      PMA_PORT: 3306
+    
+    
+  magento2_elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.13
+    container_name: magento2_elasticsearch
+    environment:
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+      network.bind_host: 0.0.0.0
+      network.host: 0.0.0.0
+      discovery.type: single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch_datas:/usr/share/elasticsearch/data
