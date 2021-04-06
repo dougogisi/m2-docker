@@ -1,9 +1,56 @@
 version: '3.7'
 services:
+#  cron:
+#    image: fballiano/magento2-cron
+#    depends_on:
+#      - magento2_apache
+#      - varnish
+#    links:
+#      - magento2_mysql
+#      - cache
+#      - sessions
+#      - clusterdata
+#      - magento2_apache
+#      - varnish
+#    volumes:
+#      - type: bind
+#        source: ./Magento/site/public
+#        target: /var/www/html
+#        consistency: delegated
+#      - type: bind
+#        source: ./varnish.secret
+#        target: /varnish.secret
+#        consistency: consistent
+      # Enable the next line if you want to add a custom php.ini
+      #- ./php.ini:/usr/local/etc/php/conf.d/999-customphp.ini
+
+  ssl:
+    image: fballiano/nginx-ssl-for-magento2
+    depends_on:
+      - varnish
+    links:
+      - varnish
+    ports:
+      - "443:443"
+
+  varnish:
+    image: fballiano/varnish
+    ports:
+      - "80:80"
+      - "6082:6082"
+    depends_on:
+      - magento2_apache
+    links:
+      - magento2_apache
+    volumes:
+      - ./varnish.vcl:/etc/varnish/default.vcl
+      - ./varnish.secret:/etc/varnish/secret
+    environment:
+      - CACHE_SIZE=502M
 
   magento2_mysql:
     container_name: magento2_mysql
-    image: mysql:8.0.12
+    image: mysql:5.6
     ports:
       - "3306:3306"
     environment:
@@ -14,24 +61,33 @@ services:
     volumes:
       - ./mysql:/var/lib/mysql
     command: mysqld --default-authentication-plugin=mysql_native_password
-    
-
 
   magento2_apache:
     container_name: magento2_apache
-    build: ./magento2-apache-php
+    build:
+      context: ./magento2-apache-php
+      args:
+        PHP_IDE_CONFIG: "serverName=doug"
+        XDEBUG_PORT: 9002
+        DOCKERMACHINE_IP: govype.local
     depends_on:
       - magento2_mysql
       - magento2_elasticsearch
+      - cache
+      - clusterdata
+      - sessions
     links:
       - magento2_mysql
       - magento2_elasticsearch
+      - cache
+      - clusterdata
+      - sessions
     volumes:
       - type: bind
-        source: ./magento2
+        source: ./Magento/site/public
         target: /var/www/html
         consistency: delegated
-      - ~/.composer/auth.json:/root/.composer/auth.json
+      - ~/.composer/auth.json:/home/seth/Projects/bat-m2-docker/Magento/composer/auth.json
       
   magento2_phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -59,3 +115,14 @@ services:
         hard: -1
     volumes:
       - ./elasticsearch_datas:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+
+  cache:
+    image: fballiano/redis-volatile
+
+  clusterdata:
+    image: fballiano/redis-volatile
+
+  sessions:
+    image: redis

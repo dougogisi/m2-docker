@@ -1,4 +1,4 @@
-FROM php:7.3-apache
+FROM php:7.2-apache
 MAINTAINER Fabrizio Balliano <fabrizio@fabrizioballiano.com>
 
 RUN apt-get update \
@@ -65,7 +65,7 @@ RUN usermod -u 1000 www-data; \
   curl -o /tmp/composer-setup.php https://getcomposer.org/installer; \
   curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig; \
   php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }"; \
-  php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer; \
+  php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --version=1.8.5 --filename=composer; \
 	rm /tmp/composer-setup.php; \
   chmod +x /usr/local/bin/composer; \
   curl -o n98-magerun2.phar http://files.magerun.net/n98-magerun2-latest.phar; \
