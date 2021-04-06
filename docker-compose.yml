@@ -1,26 +1,26 @@
 version: '3.7'
 services:
-#  cron:
-#    image: fballiano/magento2-cron
-#    depends_on:
-#      - magento2_apache
-#      - varnish
-#    links:
-#      - magento2_mysql
-#      - cache
-#      - sessions
-#      - clusterdata
-#      - magento2_apache
-#      - varnish
-#    volumes:
-#      - type: bind
-#        source: ./Magento/site/public
-#        target: /var/www/html
-#        consistency: delegated
-#      - type: bind
-#        source: ./varnish.secret
-#        target: /varnish.secret
-#        consistency: consistent
+  cron:
+    image: fballiano/magento2-cron
+    depends_on:
+      - magento2_apache
+      - varnish
+    links:
+      - magento2_mysql
+      - cache
+      - sessions
+      - clusterdata
+      - magento2_apache
+      - varnish
+    volumes:
+      - type: bind
+        source: ./Magento/site/public
+        target: /var/www/html
+        consistency: delegated
+      - type: bind
+        source: ./varnish.secret
+        target: /varnish.secret
+        consistency: consistent
       # Enable the next line if you want to add a custom php.ini
       #- ./php.ini:/usr/local/etc/php/conf.d/999-customphp.ini
 
